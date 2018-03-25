@@ -18,13 +18,6 @@ module BlkMeV::Protocol {
     $msg.append($payload);
   }
 
-  our sub decodeHeader(Buf $buf) {
-    my $command = BlkMeV::Util::bufToStr($buf.subbuf(4,12));
-    my $rlen = BlkMeV::Util::bufToInt32($buf.subbuf(16,4));
-    say "chain: {networkName($buf.subbuf(0,4))} Received: {$command.uc} ({$rlen} bytes)";
-    [$command, $rlen]
-  }
-
   our sub networkName(Buf $id) {
     "Bitcoin" if $id == Buf.new(0xf9, 0xbe, 0xb4, 0xd9);
   }

@@ -1,5 +1,4 @@
-use Numeric::Pack :ints;
-use experimental :pack;
+use BlkMeV::Util;
 
 module BlkMeV::Version {
   class Version {
@@ -14,7 +13,7 @@ module BlkMeV::Version {
       my $strlen = $b[80];
       $!user_agent = BlkMeV::Util::bufToStr($b.subbuf(81, $strlen));
       my $block_height_buf = $b.subbuf(81+$strlen, 4);
-      $!block_height = $block_height_buf.unpack("L")
+      $!block_height = BlkMeV::Util::bufToInt32($block_height_buf)
     }
   }
 }
