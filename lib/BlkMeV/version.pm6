@@ -1,7 +1,7 @@
 use Numeric::Pack :ints;
 use experimental :pack;
 
-module BlkMeV::version {
+module BlkMeV::Version {
   class Version {
     has Str $.addr_recv;
     has Str $.addr_from;

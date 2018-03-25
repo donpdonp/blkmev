@@ -2,7 +2,8 @@ use v6.c;
 use Digest::SHA256::Native;
 use Numeric::Pack :ints;
 
-use BlkMeV::version;
+use BlkMeV::Version;
+use BlkMeV::Util;
 
 module BlkMeV {
 
@@ -84,9 +85,8 @@ our sub bufToStr($buf) {
 }
 
 our sub decodeHeader(Buf $buf) {
-  #unpack-uint32 $buf.subbuf(16,4), :byte-order(little-endian);
-  my $rlen = $buf[16].Int;
   my $command = bufToStr($buf.subbuf(4,12));
+  my $rlen = BlkMeV::Util::bufToInt32($buf.subbuf(16,4));
   say "[{networkName($buf.subbuf(0,4))}] Command: {$command} PayloadLen: {$rlen}";
   [$command, $rlen]
 }
