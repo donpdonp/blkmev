@@ -13,18 +13,32 @@ module BlkMeV::Util {
 
   our sub strToBuf($s) {
     my $buf = Buf.new();
-    $buf.append($s.chars);
-    $buf.append($s.encode('ascii'));
+    if $s.chars < 255 {
+      $buf.append($s.chars);
+      $buf.append($s.encode('ascii'));
+    } else {
+      say "WARNING: strings > 255 are unimplemented";
+    }
     $buf;
   }
 
-  our sub strPad(Str $s) {
-    Buf.new($s.encode('ISO-8859-1')).reallocate(12);
+  our sub strZeroPad(Str $s, Int $padlen) {
+    Buf.new($s.encode('ISO-8859-1')).reallocate($padlen);
   }
 
   our sub bufToInt32($buf) {
     #unpack-uint32 $buf.subbuf(16,4), :byte-order(little-endian);
     $buf.unpack("L");
+  }
+
+  our sub bufTrim($msgbuf, $payload_len) {
+    my $payload = $msgbuf.subbuf(0, $payload_len);
+    subbuf-rw($msgbuf, 0, $payload_len) = Buf.new;
+    $payload
+  }
+
+  our sub bufToStr($buf) {
+    join "", $buf.map: { last when 0; $_.chr  }
   }
 
 }

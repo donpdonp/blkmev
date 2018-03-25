@@ -39,27 +39,21 @@ our sub read_loop(IO::Socket::Async $socket, Supplier $supplier, Channel $payloa
     $msgbuf.append($buf);
     if !$gotHeader {
       if $msgbuf.elems >= 24 {
-        my $header = bufTrim($msgbuf, 24);
-        my @header = BlkMeV::decodeHeader($header);
+        my $header = BlkMeV::Util::bufTrim($msgbuf, 24);
+        my @header = BlkMeV::Protocol::decodeHeader($header);
         $verb = @header[0];
         $payload_len = @header[1];
         $gotHeader = True;
       }
     }
     if $msgbuf.elems >= $payload_len {
-      my $payload = bufTrim($msgbuf, $payload_len);
+      my $payload = BlkMeV::Util::bufTrim($msgbuf, $payload_len);
       $gotHeader = False;
       #payload processing
       $payload_tube.send($payload);
       $supplier.emit($verb);
     }
   });
-}
-
-sub bufTrim($msgbuf, $payload_len) {
-  my $payload = $msgbuf.subbuf(0, $payload_len);
-  subbuf-rw($msgbuf, 0, $payload_len) = Buf.new;
-  $payload
 }
 
 }
