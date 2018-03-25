@@ -1,7 +1,7 @@
 use v6;
 use BlkMeV;
 
-module BlkMeV::net {
+module BlkMeV::Net {
 
 our sub dispatch($inmsg, $socket, $payload_tube) {
   if $inmsg eq "connect" {
@@ -14,7 +14,7 @@ our sub dispatch($inmsg, $socket, $payload_tube) {
 
   if $inmsg eq "version" {
     my $payload = $payload_tube.receive;
-    my $v = BlkMeV::version::Version.new;
+    my $v = BlkMeV::Version::Version.new;
     $v.fromBuf($payload);
     say "Connected to: {$v.user_agent} #{$v.block_height}";
 
@@ -49,7 +49,6 @@ our sub read_loop(IO::Socket::Async $socket, Supplier $supplier, Channel $payloa
     }
     if $msgbuf.elems >= $payload_len {
       my $payload = bufTrim($msgbuf, $payload_len);
-        say "Payload length {$payload.elems}/{$payload_len}";
       $gotHeader = False;
       #payload processing
       $payload_tube.send($payload);

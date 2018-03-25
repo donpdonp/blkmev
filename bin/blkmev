@@ -3,7 +3,7 @@
 use v6;
 use lib './lib';
 use BlkMeV;
-use BlkMeV::net;
+use BlkMeV::Net;
 
 sub MAIN ( Str $host =  "seed.bitcoin.sipa.be" ) {
 
@@ -17,11 +17,11 @@ sub MAIN ( Str $host =  "seed.bitcoin.sipa.be" ) {
     CATCH { default { say .^name, ': ', .Str } };
     $socket = $promise.result;
     $supplier.emit('connect');
-    BlkMeV::net::read_loop($socket, $supplier, $payload_tube);
+    BlkMeV::Net::read_loop($socket, $supplier, $payload_tube);
   });
 
   $supply.tap( -> $inmsg {
-    BlkMeV::net::dispatch($inmsg, $socket, $payload_tube)
+    BlkMeV::Net::dispatch($inmsg, $socket, $payload_tube)
   });
 
   Channel.new.receive; # wait forever
