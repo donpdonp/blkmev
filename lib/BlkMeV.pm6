@@ -87,7 +87,7 @@ our sub bufToStr($buf) {
 our sub decodeHeader(Buf $buf) {
   my $command = bufToStr($buf.subbuf(4,12));
   my $rlen = BlkMeV::Util::bufToInt32($buf.subbuf(16,4));
-  say "[{networkName($buf.subbuf(0,4))}] Command: {$command} PayloadLen: {$rlen}";
+  say "chain: {networkName($buf.subbuf(0,4))} Received: {$command.uc} ({$rlen} bytes)";
   [$command, $rlen]
 }
 

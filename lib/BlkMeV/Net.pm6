@@ -44,7 +44,6 @@ our sub read_loop(IO::Socket::Async $socket, Supplier $supplier, Channel $payloa
         $verb = @header[0];
         $payload_len = @header[1];
         $gotHeader = True;
-        say "Verb: {$verb}  Payload size: {$payload_len}";
       }
     }
     if $msgbuf.elems >= $payload_len {
