@@ -7,10 +7,8 @@ module BlkMeV::Net {
 
   our sub dispatch($inmsg, BlkMeV::Chain::Chain $chain, $socket, $payload_tube) {
     if $inmsg eq "connect" {
-      my $protoversion = 100004; #bitcoin 0.10.0
-      my $useragent = "/BlkMeV:0.1.0/";
-      my $msg = version($protoversion, $useragent, 500000);
-      say "send version {$protoversion} {$useragent} payload {$msg.elems-24}";
+      my $msg = version($chain.protocol_version, $chain.user_agent, $chain.block_height);
+      say "send version {$chain.protocol_version} {$chain.user_agent} block height {$chain.block_height} payload len {$msg.elems-24}";
       $socket.write($msg);
     }
 
