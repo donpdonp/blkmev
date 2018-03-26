@@ -30,7 +30,7 @@ module BlkMeV::Net {
     }
   }
 
-  our sub read_loop(IO::Socket::Async $socket, Supplier $supplier, Channel $payload_tube) {
+  our sub read_loop(IO::Socket::Async $socket, Supplier $supplier, Channel $payload_tube, Channel $master_switch) {
     my $msgbuf = Buf.new;
     my $gotHeader = False;
     my BlkMeV::Header::Header $header;
@@ -53,7 +53,9 @@ module BlkMeV::Net {
         $payload_tube.send($payload);
         $supplier.emit($header.command);
       }
-    });
+    },
+    done => ->  { say "async IO done"; $master_switch.send(0) } ,
+    quit => ->  { say "async IO quit" });
   }
 
 }

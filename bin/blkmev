@@ -13,6 +13,7 @@ sub MAIN ( Str $chain_name =  "bitcoin" ) {
   my $supply = $supplier.Supply;
   my $payload_tube = Channel.new;
   my $socket;
+  my $master_switch = Channel.new;
 
   say "connecting {$chain.host}:{$chain.port}";
 
@@ -20,14 +21,14 @@ sub MAIN ( Str $chain_name =  "bitcoin" ) {
     CATCH { default { say .^name, ': ', .Str } };
     $socket = $promise.result;
     $supplier.emit('connect');
-    BlkMeV::Net::read_loop($socket, $supplier, $payload_tube);
+    BlkMeV::Net::read_loop($socket, $supplier, $payload_tube, $master_switch);
   });
 
   $supply.tap( -> $inmsg {
     BlkMeV::Net::dispatch($inmsg, $chain, $socket, $payload_tube)
   });
 
-  Channel.new.receive; # wait forever
+  $master_switch.receive; # wait forever
 }
 
 =begin pod
