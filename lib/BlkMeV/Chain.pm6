@@ -29,8 +29,8 @@ module BlkMeV::Chain {
         $host = "doger.dogecoin.com";
         $port = 22556;
         &hash_func = &sha256;
-        $protocol_version = 100004;  #bitcoin 0.10.0
-        $block_height = 1200000;
+        $protocol_version = 1100004;  #dogecoin 1.10.0
+        $block_height = 2150000;
       }
 
       return self.bless(:$host, :$port, :&hash_func, user_agent => "/BlkMeV:0.1.0/",
