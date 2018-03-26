@@ -24,7 +24,7 @@ sub MAIN ( Str $chain_name =  "bitcoin" ) {
   });
 
   $supply.tap( -> $inmsg {
-    BlkMeV::Net::dispatch($inmsg, $socket, $payload_tube)
+    BlkMeV::Net::dispatch($inmsg, $chain, $socket, $payload_tube)
   });
 
   Channel.new.receive; # wait forever
