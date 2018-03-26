@@ -1,6 +1,8 @@
 use BlkMeV::Util;
 
 module BlkMeV::Header {
+  our $PACKET_LENGTH = 24;
+
   class Header {
     has Buf $.chain_id;
     has Str $.command;

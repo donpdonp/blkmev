@@ -8,7 +8,7 @@ module BlkMeV::Net {
   our sub dispatch($inmsg, BlkMeV::Chain::Chain $chain, $socket, $payload_tube) {
     if $inmsg eq "connect" {
       my $msg = version($chain.protocol_version, $chain.user_agent, $chain.block_height);
-      say "send version {$chain.protocol_version} {$chain.user_agent} block height {$chain.block_height} payload len {$msg.elems-24}";
+      say "connected. sending version {$chain.protocol_version} {$chain.user_agent} block height {$chain.block_height} payload len {$msg.elems-24}";
       $socket.write($msg);
     }
 
@@ -38,7 +38,7 @@ module BlkMeV::Net {
       $msgbuf.append($buf);
       if !$gotHeader {
         if $msgbuf.elems >= 24 {
-          my $header_buf = BlkMeV::Util::bufTrim($msgbuf, 24);
+          my $header_buf = BlkMeV::Util::bufTrim($msgbuf, $BlkMeV::Header::PACKET_LENGTH);
           $header = BlkMeV::Header::Header.new;
           $header.fromBuf($header_buf);
           $gotHeader = True;
