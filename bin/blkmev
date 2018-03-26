@@ -4,16 +4,19 @@ use v6;
 use lib './lib';
 use BlkMeV;
 use BlkMeV::Net;
+use BlkMeV::Chain;
 
-sub MAIN ( Str $host =  "seed.bitcoin.sipa.be" ) {
+sub MAIN ( Str $chain_name =  "bitcoin" ) {
 
+  my $chain = BlkMeV::Chain::Chain.new(name => $chain_name);
   my $supplier = Supplier.new;
   my $supply = $supplier.Supply;
   my $payload_tube = Channel.new;
   my $socket;
 
-  say "connecting $host";
-  IO::Socket::Async.connect($host, 8333).then( -> $promise {
+  say "connecting {$chain.host}:{$chain.port}";
+
+  IO::Socket::Async.connect($chain.host, $chain.port).then( -> $promise {
     CATCH { default { say .^name, ': ', .Str } };
     $socket = $promise.result;
     $supplier.emit('connect');
