@@ -41,12 +41,15 @@ module BlkMeV::Protocol {
   }
 
   our sub varInt($buf) returns Int {
-    my $len = varIntByteCount($buf);
-    if $len == 1 {
+    my $len = varIntByteCount($buf) - 1;
+    if $len == 0 {
       return $buf[0];
     }
-    if $len == 3 {
-      return BlkMeV::Util::bufToInt32($buf.subbuf(1,2))
+    if $len == 2 {
+      return BlkMeV::Util::bufToInt32($buf.subbuf(1,$len))
+    }
+    if $len == 4 {
+      return BlkMeV::Util::bufToInt64($buf.subbuf(1,$len))
     }
   }
 
