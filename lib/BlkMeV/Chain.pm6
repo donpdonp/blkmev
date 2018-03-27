@@ -35,7 +35,7 @@ module BlkMeV::Chain {
 
       if $name eq "litecoin" {
         $host = "dnsseed.litecoinpool.org";
-        $port = 8333;
+        $port = 9333;
         &hash_func = &sha256;
         $protocol_version = 150000;  #litecoin 0.15.0
         $block_height = 1392000;

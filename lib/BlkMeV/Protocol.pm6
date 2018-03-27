@@ -19,7 +19,11 @@ module BlkMeV::Protocol {
   }
 
   our sub networkName(Buf $id) {
-    "Bitcoin" if $id == Buf.new(0xf9, 0xbe, 0xb4, 0xd9);
+    given $id {
+      when $_ cmp Buf.new(0xf9, 0xbe, 0xb4, 0xd9) == Same { "Bitcoin" };
+      when $_ cmp Buf.new(0xfb, 0xc0, 0xb6, 0xdb) == Same { "Litecoin" };
+      when $_ cmp Buf.new(0xfc, 0xc1, 0xb7, 0xdc) == Same { "Dogecoin" };
+    }
   }
 
   our sub netAddress($addr) {
