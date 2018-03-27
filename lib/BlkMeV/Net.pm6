@@ -10,7 +10,7 @@ module BlkMeV::Net {
     my $payload = $payload_tube.receive;
     if $inmsg eq "connect" {
       my $msg = version($chain.protocol_version, $chain.user_agent, $chain.block_height);
-      say "connected. sending version {$chain.protocol_version} {$chain.user_agent} block height {$chain.block_height} payload len {$msg.elems-24}";
+      say "sending version {$chain.protocol_version} {$chain.user_agent} block height {$chain.block_height} payload len {$msg.elems-24}";
       $socket.write($msg);
     }
 
@@ -31,6 +31,9 @@ module BlkMeV::Net {
       say "Inventory msg";
       my $c = BlkMeV::Command::Inv::Inv.new;
       $c.fromBuf($payload);
+      for $c.vectors {
+        say "inventory type {$c.typeName($_[0])} {BlkMeV::Util::bufToHex($_[1])}";
+      }
     }
 
     if $inmsg eq "ping" {

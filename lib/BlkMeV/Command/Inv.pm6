@@ -4,7 +4,7 @@ use BlkMeV::Protocol;
 module BlkMeV::Command::Inv {
   class Inv {
     has Int $.count;
-    has @vectors = [];
+    has Array $.vectors = [];
 
     method fromBuf(Buf $b) {
       $!count = BlkMeV::Protocol::varInt($b);
@@ -15,7 +15,8 @@ module BlkMeV::Command::Inv {
         my $item_offset = $len_count + ($idx * $item_size);
         my $item = $b.subbuf($item_offset, $item_size);
         my $type = BlkMeV::Util::bufToInt32($item);
-        say "inventory item {$idx} type {$.typeName($type)}";
+        my $hash = $b.subbuf($item_offset+4, 32);
+        @.vectors.push(($type, $hash));
       }
     }
 

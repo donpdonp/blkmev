@@ -41,4 +41,8 @@ module BlkMeV::Util {
     join "", $buf.map: { last when 0; $_.chr  }
   }
 
+  our sub bufToHex($buf) {
+    $buf.unpack("H*")
+  }
+
 }

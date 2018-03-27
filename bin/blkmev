@@ -6,7 +6,7 @@ use BlkMeV;
 use BlkMeV::Net;
 use BlkMeV::Chain;
 
-sub MAIN ( Str $chain_name =  "bitcoin" ) {
+sub MAIN ( Str $chain_name =  "bitcoin", Str $ahost = "" ) {
 
   my $chain = BlkMeV::Chain::Chain.new(name => $chain_name);
   my $supplier = Supplier.new;
@@ -15,12 +15,14 @@ sub MAIN ( Str $chain_name =  "bitcoin" ) {
   my $socket;
   my $master_switch = Channel.new;
 
-  say "connecting {$chain.host}:{$chain.port}";
+  my $host = $ahost.chars > 0 ?? $ahost !! $chain.host;
+  say "connecting {$host}:{$chain.port}";
 
   CATCH { default { say .^name, ': ', .Str } };
 
-  IO::Socket::Async.connect($chain.host, $chain.port).then( -> $promise {
+  IO::Socket::Async.connect($host, $chain.port).then( -> $promise {
     $socket = $promise.result;
+    say "connected to {$socket.peer-host}:{$socket.peer-port}";
     $payload_tube.send("");
     $supplier.emit('connect');
     BlkMeV::Net::read_loop($socket, $supplier, $payload_tube, $master_switch);
