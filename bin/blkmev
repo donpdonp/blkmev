@@ -17,9 +17,11 @@ sub MAIN ( Str $chain_name =  "bitcoin" ) {
 
   say "connecting {$chain.host}:{$chain.port}";
 
+  CATCH { default { say .^name, ': ', .Str } };
+
   IO::Socket::Async.connect($chain.host, $chain.port).then( -> $promise {
-    CATCH { default { say .^name, ': ', .Str } };
     $socket = $promise.result;
+    $payload_tube.send("");
     $supplier.emit('connect');
     BlkMeV::Net::read_loop($socket, $supplier, $payload_tube, $master_switch);
   });

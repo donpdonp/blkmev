@@ -2,10 +2,12 @@ use v6;
 use BlkMeV;
 use BlkMeV::Header;
 use BlkMeV::Chain;
+use BlkMeV::Command::Inv;
 
 module BlkMeV::Net {
 
   our sub dispatch($inmsg, BlkMeV::Chain::Chain $chain, $socket, $payload_tube) {
+    my $payload = $payload_tube.receive;
     if $inmsg eq "connect" {
       my $msg = version($chain.protocol_version, $chain.user_agent, $chain.block_height);
       say "connected. sending version {$chain.protocol_version} {$chain.user_agent} block height {$chain.block_height} payload len {$msg.elems-24}";
@@ -13,7 +15,6 @@ module BlkMeV::Net {
     }
 
     if $inmsg eq "version" {
-      my $payload = $payload_tube.receive;
       my $v = BlkMeV::Version::Version.new;
       $v.fromBuf($payload);
       say "Connected to: {$v.user_agent} #{$v.block_height}";
@@ -24,9 +25,16 @@ module BlkMeV::Net {
     }
 
     if $inmsg eq "verack" {
-      my $msg = getinfo;
-  #    say "send getinfo";
-  #    $socket.write($msg);
+    }
+
+    if $inmsg eq "inv" {
+      say "Inventory msg";
+      my $c = BlkMeV::Command::Inv::Inv.new;
+      $c.fromBuf($payload);
+    }
+
+    if $inmsg eq "ping" {
+      say "Ping msg";
     }
   }
 
@@ -37,7 +45,7 @@ module BlkMeV::Net {
     $socket.Supply(:bin).tap( -> $buf {
       $msgbuf.append($buf);
       if !$gotHeader {
-        if $msgbuf.elems >= 24 {
+        if $msgbuf.elems >= $BlkMeV::Header::PACKET_LENGTH {
           my $header_buf = BlkMeV::Util::bufTrim($msgbuf, $BlkMeV::Header::PACKET_LENGTH);
           $header = BlkMeV::Header::Header.new;
           $header.fromBuf($header_buf);
