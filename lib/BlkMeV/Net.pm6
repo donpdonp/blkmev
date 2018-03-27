@@ -28,7 +28,6 @@ module BlkMeV::Net {
     }
 
     if $inmsg eq "inv" {
-      say "Inventory msg";
       my $c = BlkMeV::Command::Inv::Inv.new;
       $c.fromBuf($payload);
       for $c.vectors {
@@ -37,7 +36,8 @@ module BlkMeV::Net {
     }
 
     if $inmsg eq "ping" {
-      say "Ping msg";
+      say "Ping/Pong {BlkMeV::Util::bufToHex($payload)}";
+      $socket.write(BlkMeV::Protocol::push("pong", $payload));
     }
   }
 
