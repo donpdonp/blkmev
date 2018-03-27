@@ -33,4 +33,21 @@ module BlkMeV::Protocol {
             0x0a, 0x00, 0x00, $addr, 0x20, 0x8D)
   }
 
+  our sub varIntByteCount($buf) returns Int {
+    if $buf[0] < 0xfd { return 1 }
+    if $buf[0] == 0xfd { return 3 }
+    if $buf[0] == 0xfe { return 5 }
+    if $buf[0] == 0xff { return 9 }
+  }
+
+  our sub varInt($buf) returns Int {
+    my $len = varIntByteCount($buf);
+    if $len == 1 {
+      return $buf[0];
+    }
+    if $len == 3 {
+      return BlkMeV::Util::bufToInt32($buf.subbuf(1,2))
+    }
+  }
+
 }

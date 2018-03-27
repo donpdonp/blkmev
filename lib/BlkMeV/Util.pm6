@@ -3,7 +3,7 @@ use experimental :pack;
 
 module BlkMeV::Util {
 
-  our sub int32Buf($int) {
+  our sub int32Buf($int) returns Buf {
     pack-uint32 $int, :byte-order(little-endian);;
   }
 
