@@ -1,5 +1,6 @@
 use Digest::SHA256::Native;
 use BlkMeV::Util;
+use BlkMeV::Chain::Bitcoin;
 
 module BlkMeV::Protocol {
 
@@ -20,7 +21,7 @@ module BlkMeV::Protocol {
 
   our sub networkName(Buf $id) {
     given $id {
-      when $_ cmp Buf.new(0xf9, 0xbe, 0xb4, 0xd9) == Same { "Bitcoin" };
+      when $_ cmp BlkMeV::Chain::Bitcoin::<$header> == Same { "Bitcoin" };
       when $_ cmp Buf.new(0xfb, 0xc0, 0xb6, 0xdb) == Same { "Litecoin" };
       when $_ cmp Buf.new(0xfc, 0xc1, 0xb7, 0xdc) == Same { "Dogecoin" };
     }

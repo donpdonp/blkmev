@@ -1,4 +1,5 @@
 use BlkMeV::Util;
+use BlkMeV::Chain::Bitcoin;
 use Digest::SHA256::Native;
 
 module BlkMeV::Chain {
@@ -17,7 +18,7 @@ module BlkMeV::Chain {
       my $protocol_version;
       my $block_height;
 
-      if $name eq "bitcoin" {
+      if $name eq BlkMeV::Chain::Bitcoin::<$name> {
         $host = "seed.bitcoin.sipa.be";
         $port = 8333;
         &hash_func = &sha256;
