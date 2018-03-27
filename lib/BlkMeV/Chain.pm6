@@ -26,7 +26,7 @@ module BlkMeV::Chain {
       }
 
       if $name eq "dogecoin" {
-        $host = "doger.dogecoin.com";
+        $host = "seed.multidoge.org";
         $port = 22556;
         &hash_func = &sha256;
         $protocol_version = 1100004;  #dogecoin 1.10.0
