@@ -11,7 +11,7 @@ module BlkMeV::Net {
                    BlkMeV::Header::Header $header,
                    Buf $payload) {
     if $header.command eq "+connect" {
-      my $msg = version($chain.protocol_version, $chain.user_agent, $chain.block_height);
+      my $msg = version($chain);
       say "sending version {$chain.protocol_version} {$chain.user_agent} block height {$chain.block_height} payload len {$msg.elems-24}";
       $socket.write($msg);
     }
@@ -21,7 +21,7 @@ module BlkMeV::Net {
       $v.fromBuf($payload);
       say "Connected to: {$v.user_agent} #{$v.block_height}";
 
-      my $msg = verack;
+      my $msg = verack($chain);
       say "send verack";
       $socket.write($msg);
     }
@@ -29,17 +29,23 @@ module BlkMeV::Net {
     if $header.command eq "verack" {
     }
 
+    if $header.command eq "reject" {
+      my $c = BlkMeV::Command::Reject::Reject.new;
+      $c.fromBuf($payload);
+      say "Rejected: {$c.message}";
+    }
+
     if $header.command eq "inv" {
       my $c = BlkMeV::Command::Inv::Inv.new;
       $c.fromBuf($payload);
       for $c.vectors {
-        say "inventory type {$c.typeName($_[0])} {BlkMeV::Util::bufToHex($_[1])}";
+        say "{$socket.peer-host} {$c.typeName($_[0])} {BlkMeV::Util::bufToHex($_[1])}";
       }
     }
 
     if $header.command eq "ping" {
       say "Ping/Pong {BlkMeV::Util::bufToHex($payload)}";
-      $socket.write(BlkMeV::Protocol::push("pong", $payload));
+      $socket.write(BlkMeV::Protocol::push($chain, "pong", $payload));
     }
   }
 

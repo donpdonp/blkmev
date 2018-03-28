@@ -9,7 +9,6 @@ module BlkMeV::Command::Inv {
     method fromBuf(Buf $b) {
       $!count = BlkMeV::Protocol::varInt($b);
       my $len_count = BlkMeV::Protocol::varIntByteCount($b);
-      say "Inv count {$!count} (using storage {$len_count})";
       for 0..($!count-1) -> $idx {
         my $item_size = 36;
         my $item_offset = $len_count + ($idx * $item_size);

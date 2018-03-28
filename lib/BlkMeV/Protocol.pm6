@@ -1,13 +1,12 @@
 use Digest::SHA256::Native;
 use BlkMeV::Util;
+use BlkMeV::Chain;
 use BlkMeV::Chain::Bitcoin;
 use BlkMeV::Chain::Litecoin;
 use BlkMeV::Chain::Dogecoin;
 
 module BlkMeV::Protocol {
-  our $chain;
-
-  our sub push($verb, $payload) {
+  our sub push(BlkMeV::Chain::Chain $chain, $verb, $payload) {
     my $hello = networkHello($chain.name); # Bitcoin Mainnet
     my $command = BlkMeV::Util::strZeroPad($verb, 12);
     my $payload_length = BlkMeV::Util::int32Buf($payload.elems);

@@ -45,4 +45,9 @@ module BlkMeV::Util {
     $buf.unpack("H*")
   }
 
+  our sub varStr($b) {
+    my $len = $b[0];
+    say "varStr {$len}";
+    $b.substr(1, $b.elems).unpack("A*");
+  }
 }
