@@ -3,13 +3,17 @@ use BlkMeV;
 use BlkMeV::Header;
 use BlkMeV::Chain;
 use BlkMeV::Command::Inv;
+use BlkMeV::Command::Reject;
+use BlkMeV::Command::Addr;
 
 module BlkMeV::Net {
 
   our sub dispatch($socket,
                    BlkMeV::Chain::Chain $chain,
                    BlkMeV::Header::Header $header,
-                   Buf $payload) {
+                   Buf $payload,
+                   @mempool) {
+
     if $header.command eq "+connect" {
       my $msg = version($chain);
       say "sending version {$chain.protocol_version} {$chain.user_agent} block height {$chain.block_height} payload len {$msg.elems-24}";
@@ -27,6 +31,15 @@ module BlkMeV::Net {
     }
 
     if $header.command eq "verack" {
+      # peer accepted us, find other peers
+      $socket.write(BlkMeV::Protocol::push($chain, "getaddr", Buf.new()));
+    }
+
+    if $header.command eq "addr" {
+      say "addr", $payload;
+      my $c = BlkMeV::Command::Addr::Addr.new;
+      $c.fromBuf($payload);
+      say "Addr: count {$c.count}";
     }
 
     if $header.command eq "reject" {
@@ -39,7 +52,13 @@ module BlkMeV::Net {
       my $c = BlkMeV::Command::Inv::Inv.new;
       $c.fromBuf($payload);
       for $c.vectors {
-        say "{$socket.peer-host} {$c.typeName($_[0])} {BlkMeV::Util::bufToHex($_[1])}";
+        my $hexitem = BlkMeV::Util::bufToHex($_[1]);
+        say "{$c.typeName($_[0])} {$hexitem} {@mempool.elems}";
+        if @mempool.index($hexitem) {
+          say "Mempool dupe/found!";
+        } else {
+          @mempool.push($hexitem);
+        }
       }
     }
 
@@ -61,7 +80,7 @@ module BlkMeV::Net {
           $header = BlkMeV::Header::Header.new;
           $header.fromBuf($header_buf);
           $gotHeader = True;
-          say "chain: {BlkMeV::Protocol::networkName($header.chain_id)} Received: {$header.command.uc} ({$header.payload_length} bytes)";
+          say "{$socket.peer-host} [{BlkMeV::Protocol::networkName($header.chain_id)}] command: {$header.command.uc} ({$header.payload_length} bytes)";
         }
       }
 
