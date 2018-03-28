@@ -53,12 +53,13 @@ module BlkMeV::Net {
       $c.fromBuf($payload);
       for $c.vectors {
         my $hexitem = BlkMeV::Util::bufToHex($_[1]);
-        say "{$c.typeName($_[0])} {$hexitem} {@mempool.elems}";
+        my $DUP = "";
         if @mempool.index($hexitem) {
-          say "Mempool dupe/found!";
+          $DUP = "DUP";
         } else {
           @mempool.push($hexitem);
         }
+        say "{$c.typeName($_[0])} {$hexitem} {@mempool.elems} {$DUP}";
       }
     }
 
