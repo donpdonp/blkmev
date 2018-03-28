@@ -1,11 +1,14 @@
 use Digest::SHA256::Native;
 use BlkMeV::Util;
 use BlkMeV::Chain::Bitcoin;
+use BlkMeV::Chain::Litecoin;
+use BlkMeV::Chain::Dogecoin;
 
 module BlkMeV::Protocol {
+  our $chain;
 
   our sub push($verb, $payload) {
-    my $hello = Buf.new(0xf9, 0xbe, 0xb4, 0xd9); # Bitcoin Mainnet
+    my $hello = networkHello($chain.name); # Bitcoin Mainnet
     my $command = BlkMeV::Util::strZeroPad($verb, 12);
     my $payload_length = BlkMeV::Util::int32Buf($payload.elems);
 
@@ -19,11 +22,19 @@ module BlkMeV::Protocol {
     $msg.append($payload);
   }
 
+  our sub networkHello(Str $name) {
+    given $name {
+      when BlkMeV::Chain::Bitcoin::<$name> { BlkMeV::Chain::Bitcoin::<$header> }
+      when BlkMeV::Chain::Litecoin::<$name> { BlkMeV::Chain::Litecoin::<$header> }
+      when BlkMeV::Chain::Dogecoin::<$name> { BlkMeV::Chain::Dogecoin::<$header> }
+    }
+  }
+
   our sub networkName(Buf $id) {
     given $id {
-      when $_ cmp BlkMeV::Chain::Bitcoin::<$header> == Same { "Bitcoin" };
-      when $_ cmp Buf.new(0xfb, 0xc0, 0xb6, 0xdb) == Same { "Litecoin" };
-      when $_ cmp Buf.new(0xfc, 0xc1, 0xb7, 0xdc) == Same { "Dogecoin" };
+      when $_ cmp BlkMeV::Chain::Bitcoin::<$header> == Same { BlkMeV::Chain::Bitcoin::<$name> };
+      when $_ cmp BlkMeV::Chain::Litecoin::<$header> == Same { BlkMeV::Chain::Litecoin::<$name> };
+      when $_ cmp BlkMeV::Chain::Dogecoin::<$header> == Same { BlkMeV::Chain::Dogecoin::<$name> };
     }
   }
 

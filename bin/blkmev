@@ -4,6 +4,7 @@ use v6;
 use lib './lib';
 use BlkMeV;
 use BlkMeV::Net;
+use BlkMeV::Protocol;
 use BlkMeV::Chain;
 
 sub MAIN ( Str $chain_name =  "bitcoin", Str $ahost = "" ) {
@@ -14,6 +15,8 @@ sub MAIN ( Str $chain_name =  "bitcoin", Str $ahost = "" ) {
   my $payload_tube = Channel.new;
   my $socket;
   my $master_switch = Channel.new;
+
+  BlkMeV::Protocol::<$chain> = $chain;
 
   my $host = $ahost.chars > 0 ?? $ahost !! $chain.host;
   say "connecting {$host}:{$chain.port}";

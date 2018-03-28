@@ -4,6 +4,7 @@ use Digest::SHA256::Native;
 
 module BlkMeV::Chain {
   class Chain {
+    has Str $.name;
     has Str $.host;
     has Int $.port;
     has &.hash_func;
@@ -42,7 +43,7 @@ module BlkMeV::Chain {
         $block_height = 1392000;
       }
 
-      return self.bless(:$host, :$port, :&hash_func, user_agent => "/BlkMeV:0.1.0/",
+      return self.bless(:$name, :$host, :$port, :&hash_func, user_agent => "/BlkMeV:0.1.0/",
                         :$protocol_version, :$block_height);
     }
   }
