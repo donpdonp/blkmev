@@ -43,6 +43,9 @@ module BlkMeV::Protocol {
             0x0a, 0x00, 0x00, $addr, 0x20, 0x8D)
   }
 
+  our sub bufToAddress(Buf $b) {
+  }
+
   our sub varIntByteCount($buf) returns Int {
     if $buf[0] < 0xfd { return 1 }
     if $buf[0] == 0xfd { return 3 }
@@ -63,8 +66,9 @@ module BlkMeV::Protocol {
     }
   }
 
-  our sub varStr($b) {
-    my $len = $b[0];
-    BlkMeV::Util::bufToAscii($b.subbuf(1, $b.elems));
+  our sub varStr($buf) {
+    my $len = varIntByteCount($buf);
+    my $count = varInt($buf);
+    BlkMeV::Util::bufToAscii($buf.subbuf($len, $count));
   }
 }
