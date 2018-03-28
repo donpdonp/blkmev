@@ -30,7 +30,6 @@ sub client (@mempool, $chain, $host, $master_switch) {
 
   IO::Socket::Async.connect($host, $chain.port).then( -> $promise {
     CATCH { default { say .^name, ': ', .Str } };
-    say("in promise {$host}");
     my $socket = $promise.result;
     say "connected to {$socket.peer-host}:{$socket.peer-port}";
     my $header = BlkMeV::Header::Header.new;

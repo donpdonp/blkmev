@@ -37,10 +37,9 @@ module BlkMeV::Net {
     }
 
     if $header.command eq "addr" {
-      say "addr", $payload;
       my $c = BlkMeV::Command::Addr::Addr.new;
       $c.fromBuf($payload);
-      say "Addr: count {$c.count.perl}";
+      say $c.addrs.perl;
     }
 
     if $header.command eq "reject" {

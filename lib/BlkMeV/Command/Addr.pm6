@@ -4,6 +4,7 @@ use BlkMeV::Protocol;
 module BlkMeV::Command::Addr {
   class Addr {
     has Int $.count;
+    has @.addrs;
 
     method fromBuf(Buf $b) {
       my $intlen = BlkMeV::Protocol::varIntByteCount($b);
@@ -13,9 +14,9 @@ module BlkMeV::Command::Addr {
         my $offset = $intlen + ($idx * $addrsize);
         my $date = BlkMeV::Util::bufToInt32($b.subbuf($offset, 4));
         my $services = $b.subbuf($offset+4, 8);
-        my $addr = $b.subbuf($offset+12, 16);
+        my $addr = BlkMeV::Protocol::bufToAddress($b.subbuf($offset+12, 16));
         my $port = BlkMeV::Util::bufToInt16($b.subbuf($offset+28, 2));
-        say "addr.frombuf time {$date} {$addr.perl} port {$port}";
+        @!addrs.push("{$addr}:{$port}");
       }
     }
   }
