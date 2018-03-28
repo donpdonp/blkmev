@@ -56,10 +56,10 @@ module BlkMeV::Protocol {
       return $buf[0];
     }
     if $len == 2 {
-      return BlkMeV::Util::bufToInt32($buf.subbuf(1,$len))
+      return BlkMeV::Util::bufToInt16($buf.subbuf(1,$len))
     }
     if $len == 4 {
-      return BlkMeV::Util::bufToInt64($buf.subbuf(1,$len))
+      return BlkMeV::Util::bufToInt32($buf.subbuf(1,$len))
     }
   }
 

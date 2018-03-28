@@ -1,4 +1,5 @@
 use v6;
+use experimental :pack;
 use BlkMeV;
 use BlkMeV::Header;
 use BlkMeV::Chain;
@@ -39,13 +40,13 @@ module BlkMeV::Net {
       say "addr", $payload;
       my $c = BlkMeV::Command::Addr::Addr.new;
       $c.fromBuf($payload);
-      say "Addr: count {$c.count}";
+      say "Addr: count {$c.count.perl}";
     }
 
     if $header.command eq "reject" {
       my $c = BlkMeV::Command::Reject::Reject.new;
       $c.fromBuf($payload);
-      say "Rejected: {$c.message}";
+      say "Rejected: {$c.message.perl} buf {$payload.perl}";
     }
 
     if $header.command eq "inv" {
