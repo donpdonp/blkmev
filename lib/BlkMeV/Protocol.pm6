@@ -52,7 +52,6 @@ module BlkMeV::Protocol {
 
   our sub varInt($buf) returns Int {
     my $len = varIntByteCount($buf) - 1;
-    say "varInt len {$len}";
     if $len == 0 {
       return $buf[0];
     }
@@ -66,7 +65,6 @@ module BlkMeV::Protocol {
 
   our sub varStr($b) {
     my $len = $b[0];
-    say "varStr {$len}";
     BlkMeV::Util::bufToAscii($b.subbuf(1, $b.elems));
   }
 }
