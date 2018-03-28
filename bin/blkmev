@@ -6,13 +6,13 @@ use BlkMeV;
 use BlkMeV::Net;
 use BlkMeV::Protocol;
 use BlkMeV::Chain;
+use BlkMeV::Header;
 
 sub MAIN ( Str $chain_name =  "bitcoin", Str $ahost = "" ) {
 
   my $chain = BlkMeV::Chain::Chain.new(name => $chain_name);
   my $supplier = Supplier.new;
   my $supply = $supplier.Supply;
-  my $payload_tube = Channel.new;
   my $socket;
   my $master_switch = Channel.new;
 
@@ -21,18 +21,19 @@ sub MAIN ( Str $chain_name =  "bitcoin", Str $ahost = "" ) {
   my $host = $ahost.chars > 0 ?? $ahost !! $chain.host;
   say "connecting {$host}:{$chain.port}";
 
-  CATCH { default { say .^name, ': ', .Str } };
 
   IO::Socket::Async.connect($host, $chain.port).then( -> $promise {
+    CATCH { default { say .^name, ': ', .Str } };
     $socket = $promise.result;
     say "connected to {$socket.peer-host}:{$socket.peer-port}";
-    $payload_tube.send("");
-    $supplier.emit('connect');
-    BlkMeV::Net::read_loop($socket, $supplier, $payload_tube, $master_switch);
+    my $header = BlkMeV::Header::Header.new;
+    $header.fromStr("+connect");
+    $supplier.emit(($socket, $chain, $header, Buf.new()));
+    BlkMeV::Net::read_loop($socket, $chain, $supplier, $master_switch);
   });
 
-  $supply.tap( -> $inmsg {
-    BlkMeV::Net::dispatch($inmsg, $chain, $socket, $payload_tube)
+  $supply.tap( -> ($socket, $chain, $header, $payload) {
+    BlkMeV::Net::dispatch($socket, $chain, $header, $payload)
   });
 
   $master_switch.receive; # wait forever

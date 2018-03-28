@@ -13,5 +13,8 @@ module BlkMeV::Header {
       $!command = BlkMeV::Util::bufToStr($buf.subbuf(4,12));
       $!payload_length = BlkMeV::Util::bufToInt32($buf.subbuf(16,4));
     }
+    method fromStr(Str $str) {
+      $!command = $str;
+    }
   }
 }

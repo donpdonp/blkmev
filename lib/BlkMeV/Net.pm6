@@ -6,15 +6,17 @@ use BlkMeV::Command::Inv;
 
 module BlkMeV::Net {
 
-  our sub dispatch($inmsg, BlkMeV::Chain::Chain $chain, $socket, $payload_tube) {
-    my $payload = $payload_tube.receive;
-    if $inmsg eq "connect" {
+  our sub dispatch($socket,
+                   BlkMeV::Chain::Chain $chain,
+                   BlkMeV::Header::Header $header,
+                   Buf $payload) {
+    if $header.command eq "+connect" {
       my $msg = version($chain.protocol_version, $chain.user_agent, $chain.block_height);
       say "sending version {$chain.protocol_version} {$chain.user_agent} block height {$chain.block_height} payload len {$msg.elems-24}";
       $socket.write($msg);
     }
 
-    if $inmsg eq "version" {
+    if $header.command eq "version" {
       my $v = BlkMeV::Version::Version.new;
       $v.fromBuf($payload);
       say "Connected to: {$v.user_agent} #{$v.block_height}";
@@ -24,10 +26,10 @@ module BlkMeV::Net {
       $socket.write($msg);
     }
 
-    if $inmsg eq "verack" {
+    if $header.command eq "verack" {
     }
 
-    if $inmsg eq "inv" {
+    if $header.command eq "inv" {
       my $c = BlkMeV::Command::Inv::Inv.new;
       $c.fromBuf($payload);
       for $c.vectors {
@@ -35,13 +37,13 @@ module BlkMeV::Net {
       }
     }
 
-    if $inmsg eq "ping" {
+    if $header.command eq "ping" {
       say "Ping/Pong {BlkMeV::Util::bufToHex($payload)}";
       $socket.write(BlkMeV::Protocol::push("pong", $payload));
     }
   }
 
-  our sub read_loop(IO::Socket::Async $socket, Supplier $supplier, Channel $payload_tube, Channel $master_switch) {
+  our sub read_loop(IO::Socket::Async $socket, $chain, Supplier $supplier, Channel $master_switch) {
     my $msgbuf = Buf.new;
     my $gotHeader = False;
     my BlkMeV::Header::Header $header;
@@ -60,9 +62,7 @@ module BlkMeV::Net {
       if $msgbuf.elems >= $header.payload_length {
         my $payload = BlkMeV::Util::bufTrim($msgbuf, $header.payload_length);
         $gotHeader = False;
-        #payload processing
-        $payload_tube.send($payload);
-        $supplier.emit($header.command);
+        $supplier.emit(($socket, $chain, $header, $payload));
       }
     },
     done => ->  { say "async IO done"; $master_switch.send(0) } ,
