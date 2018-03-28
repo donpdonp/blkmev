@@ -35,6 +35,10 @@ module BlkMeV::Util {
     $buf.unpack("S");
   }
 
+  our sub bufToInt16BE($buf) {
+    $buf.unpack("n");
+  }
+
   our sub bufTrim($msgbuf, $payload_len) {
     my $payload = $msgbuf.subbuf(0, $payload_len);
     subbuf-rw($msgbuf, 0, $payload_len) = Buf.new;

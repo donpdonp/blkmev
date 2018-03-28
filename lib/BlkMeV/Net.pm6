@@ -45,7 +45,7 @@ module BlkMeV::Net {
     if $header.command eq "reject" {
       my $c = BlkMeV::Command::Reject::Reject.new;
       $c.fromBuf($payload);
-      say "Rejected: {$c.code.perl} {$c.message.perl} buf {$payload.perl}";
+      say "Rejected: {$c.code.perl} {$c.message.perl}";
     }
 
     if $header.command eq "inv" {

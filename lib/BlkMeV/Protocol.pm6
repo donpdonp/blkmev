@@ -45,7 +45,8 @@ module BlkMeV::Protocol {
 
   our sub bufToAddress(Buf $b) {
     my $v4 = $b[10] == 0xff && $b[11] == 0xff;
-    if $v4 { "{$b[12]}.{$b[13]}.{$b[14]}.{$b[15]}" } else {"ipv6"}
+    if $v4 { "{$b[12]}.{$b[13]}.{$b[14]}.{$b[15]}" }
+      else { "[{($b.map(-> $d { Buf.new($d).unpack("H") }).join(":"))}]" }
   }
 
   our sub varIntByteCount($buf) returns Int {
