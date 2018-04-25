@@ -16,8 +16,8 @@ sub MAIN ( Str $chain_name =  "bitcoin", Str $ahost = "" ) {
   my $host = $ahost.chars > 0 ?? $ahost !! $chain.host;
 
   client(@mempool, $chain, $host, $master_switch);
-  my $chain2 = BlkMeV::Chain::Chain.new(name => $chain_name);
-  client(@mempool, $chain2, "218.75.140.48", $master_switch);
+#  my $chain2 = BlkMeV::Chain::Chain.new(name => $chain_name);
+#  client(@mempool, $chain2, "218.75.140.48", $master_switch);
 
   $master_switch.receive; # wait forever
 }

@@ -24,6 +24,7 @@ module BlkMeV::Protocol {
   our sub networkHello(Str $name) {
     given $name {
       when BlkMeV::Chain::Bitcoin::<$name> { BlkMeV::Chain::Bitcoin::<$header> }
+      when BlkMeV::Chain::BitcoinCash::<$name> { BlkMeV::Chain::BitcoinCash::<$header> }
       when BlkMeV::Chain::Litecoin::<$name> { BlkMeV::Chain::Litecoin::<$header> }
       when BlkMeV::Chain::Dogecoin::<$name> { BlkMeV::Chain::Dogecoin::<$header> }
     }
@@ -32,6 +33,7 @@ module BlkMeV::Protocol {
   our sub networkName(Buf $id) {
     given $id {
       when $_ cmp BlkMeV::Chain::Bitcoin::<$header> == Same { BlkMeV::Chain::Bitcoin::<$name> };
+      when $_ cmp BlkMeV::Chain::BitcoinCash::<$header> == Same { BlkMeV::Chain::Bitcoin::<$name> };
       when $_ cmp BlkMeV::Chain::Litecoin::<$header> == Same { BlkMeV::Chain::Litecoin::<$name> };
       when $_ cmp BlkMeV::Chain::Dogecoin::<$header> == Same { BlkMeV::Chain::Dogecoin::<$name> };
     }

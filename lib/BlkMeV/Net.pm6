@@ -39,7 +39,7 @@ module BlkMeV::Net {
     if $header.command eq "addr" {
       my $c = BlkMeV::Command::Addr::Addr.new;
       $c.fromBuf($payload);
-      say $c.addrs.perl;
+      say "peers: {$c.addrs[0]} ... {$c.addrs.elems} peer addresses";
     }
 
     if $header.command eq "reject" {
@@ -59,7 +59,7 @@ module BlkMeV::Net {
         } else {
           @mempool.push($hexitem);
         }
-        say "{$c.typeName($_[0])} {$hexitem} {@mempool.elems} {$DUP}";
+        say "{$c.typeName($_[0])} {$hexitem} mempool#{@mempool.elems} {$DUP}";
       }
     }
 
