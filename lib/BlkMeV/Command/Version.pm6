@@ -8,6 +8,7 @@ package BlkMeV {
       has Str $.addr_from;
       has Str $.user_agent;
       has Int $.block_height;
+      has Int $.protocol_version;
 
       method build(BlkMeV::Chain::Chain $chain) {
         my $payload = Buf.new();
@@ -22,6 +23,8 @@ package BlkMeV {
       }
 
       method fromBuf(Buf $b) {
+        my $protocol_version_buf = $b.subbuf(0, 4);
+        $!protocol_version = Util::bufToInt32($protocol_version_buf);
         $!addr_recv = $b.subbuf(20, 26).perl;
         $!addr_from = $b.subbuf(46, 26).perl;
         my $strlen = $b[80];

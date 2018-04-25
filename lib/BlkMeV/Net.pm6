@@ -27,7 +27,7 @@ module BlkMeV::Net {
     if $header.command eq "version" {
       my $v = Command::Version.new;
       $v.fromBuf($payload);
-      say "Connected to: {$v.user_agent} #{$v.block_height}";
+      say "Connected to: {$v.user_agent} version #{$v.protocol_version} height #{$v.block_height}";
 
       my $msg = verack($chain);
       say "send verack";

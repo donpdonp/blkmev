@@ -1,9 +1,6 @@
 use Digest::SHA256::Native;
 use BlkMeV::Util;
 use BlkMeV::Chain;
-use BlkMeV::Chain::Bitcoin;
-use BlkMeV::Chain::Litecoin;
-use BlkMeV::Chain::Dogecoin;
 
 module BlkMeV::Protocol {
   our sub push(BlkMeV::Chain::Chain $chain, $verb, $payload) {
@@ -33,7 +30,7 @@ module BlkMeV::Protocol {
   our sub networkName(Buf $id) {
     given $id {
       when $_ cmp BlkMeV::Chain::Bitcoin::<$header> == Same { BlkMeV::Chain::Bitcoin::<$name> };
-      when $_ cmp BlkMeV::Chain::BitcoinCash::<$header> == Same { BlkMeV::Chain::Bitcoin::<$name> };
+      when $_ cmp BlkMeV::Chain::BitcoinCash::<$header> == Same { BlkMeV::Chain::BitcoinCash::<$name> };
       when $_ cmp BlkMeV::Chain::Litecoin::<$header> == Same { BlkMeV::Chain::Litecoin::<$name> };
       when $_ cmp BlkMeV::Chain::Dogecoin::<$header> == Same { BlkMeV::Chain::Dogecoin::<$name> };
     }
