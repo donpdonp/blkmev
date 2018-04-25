@@ -17,7 +17,7 @@ module BlkMeV::Net {
                    @mempool) {
 
     if $header.command eq "+connect" {
-      my $v = BlkMeV::Command::Version::Version.new;
+      my $v = Command::Version.new;
       my $payload = $v.build($chain);
       my $msg = BlkMeV::Protocol::push($chain, "version", $payload);
       say "sending version {$chain.protocol_version} {$chain.user_agent} block height {$chain.block_height} payload len {$msg.elems-24}";
@@ -25,7 +25,7 @@ module BlkMeV::Net {
     }
 
     if $header.command eq "version" {
-      my $v = BlkMeV::Command::Version::Version.new;
+      my $v = Command::Version.new;
       $v.fromBuf($payload);
       say "Connected to: {$v.user_agent} #{$v.block_height}";
 
