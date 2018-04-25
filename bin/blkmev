@@ -8,12 +8,12 @@ use BlkMeV::Protocol;
 use BlkMeV::Chain;
 use BlkMeV::Header;
 
-sub MAIN ( Str $chain_name =  "bitcoin", Str $ahost = "" ) {
+sub MAIN ( Str $chain_name =  "bitcoin", Str $seed_host = "" ) {
 
   my $chain = BlkMeV::Chain::Chain.new(name => $chain_name);
   my $master_switch = Channel.new;
   my @mempool;
-  my $host = $ahost.chars > 0 ?? $ahost !! $chain.host;
+  my $host = $seed_host.chars > 0 ?? $seed_host !! $chain.host;
 
   client(@mempool, $chain, $host, $master_switch);
 #  my $chain2 = BlkMeV::Chain::Chain.new(name => $chain_name);

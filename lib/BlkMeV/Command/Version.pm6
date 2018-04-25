@@ -12,22 +12,22 @@ package BlkMeV {
       method build(BlkMeV::Chain::Chain $chain) {
         my $payload = Buf.new();
         $payload.append(Util::int32Buf($chain.protocol_version)); #version
-        $payload.append(BlkMeV::Util::int64Buf(7)); #services
-        $payload.append(BlkMeV::Util::int64Buf(DateTime.now.posix)); #timestamp
+        $payload.append(Util::int64Buf(7)); #services
+        $payload.append(Util::int64Buf(DateTime.now.posix)); #timestamp
         $payload.append(BlkMeV::Protocol::netAddress(1)); #Recipient
         $payload.append(BlkMeV::Protocol::netAddress(2)); #Sender
-        $payload.append(BlkMeV::Util::int64Buf(1521609933)); #nodeID/nonce
-        $payload.append(BlkMeV::Util::strToBuf($chain.user_agent)); #client version string
-        $payload.append(BlkMeV::Util::int32Buf($chain.block_height)); #blockheight
+        $payload.append(Util::int64Buf(1521609933)); #nodeID/nonce
+        $payload.append(Util::strToBuf($chain.user_agent)); #client version string
+        $payload.append(Util::int32Buf($chain.block_height)); #blockheight
       }
 
       method fromBuf(Buf $b) {
         $!addr_recv = $b.subbuf(20, 26).perl;
         $!addr_from = $b.subbuf(46, 26).perl;
         my $strlen = $b[80];
-        $!user_agent = BlkMeV::Util::bufToStr($b.subbuf(81, $strlen));
+        $!user_agent = Util::bufToStr($b.subbuf(81, $strlen));
         my $block_height_buf = $b.subbuf(81+$strlen, 4);
-        $!block_height = BlkMeV::Util::bufToInt32($block_height_buf)
+        $!block_height = Util::bufToInt32($block_height_buf)
       }
     }
   }
