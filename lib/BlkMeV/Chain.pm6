@@ -1,6 +1,8 @@
 use BlkMeV::Util;
 use BlkMeV::Chain::Bitcoin;
 use BlkMeV::Chain::BitcoinCash;
+use BlkMeV::Chain::Dogecoin;
+use BlkMeV::Chain::Litecoin;
 use Digest::SHA256::Native;
 
 module BlkMeV::Chain {
@@ -32,7 +34,7 @@ module BlkMeV::Chain {
         $host = "seed-abc.bitcoinforks.org";
         $port = 8333;
         &hash_func = &sha256;
-        $protocol_version = 100004;  #bitcoin 0.10.0
+        $protocol_version = 70015;  #bitcoincash 0.7.1
         $block_height = 500000;
       }
 

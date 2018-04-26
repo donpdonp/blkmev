@@ -4,9 +4,6 @@ use v6;
 use lib './lib';
 use BlkMeV;
 use BlkMeV::Net;
-use BlkMeV::Protocol;
-use BlkMeV::Chain;
-use BlkMeV::Header;
 
 sub MAIN ( Str $chain_name =  "bitcoin", Str $seed_host = "" ) {
 
@@ -15,32 +12,11 @@ sub MAIN ( Str $chain_name =  "bitcoin", Str $seed_host = "" ) {
   my @mempool;
   my $host = $seed_host.chars > 0 ?? $seed_host !! $chain.host;
 
-  client(@mempool, $chain, $host, $master_switch);
+  Net::client(@mempool, $chain, $host, $master_switch);
 #  my $chain2 = BlkMeV::Chain::Chain.new(name => $chain_name);
 #  client(@mempool, $chain2, "218.75.140.48", $master_switch);
 
   $master_switch.receive; # wait forever
-}
-
-sub client (@mempool, $chain, $host, $master_switch) {
-  my $supplier = Supplier.new;
-  my $supply = $supplier.Supply;
-
-  say "connecting {$chain.name} {$host}:{$chain.port}";
-
-  IO::Socket::Async.connect($host, $chain.port).then( -> $promise {
-    CATCH { default { say .^name, ': ', .Str } };
-    my $socket = $promise.result;
-    say "connected to {$socket.peer-host}:{$socket.peer-port}";
-    my $header = BlkMeV::Header::Header.new;
-    $header.fromStr("+connect");
-    $supplier.emit(($socket, $chain, $header, Buf.new()));
-    BlkMeV::Net::read_loop($socket, $chain, $supplier, $master_switch);
-  });
-
-  $supply.tap( -> ($socket, $chain, $header, $payload) {
-    BlkMeV::Net::dispatch($socket, $chain, $header, $payload, @mempool)
-  });
 }
 
 =begin pod

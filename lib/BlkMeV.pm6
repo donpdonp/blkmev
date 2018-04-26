@@ -5,7 +5,7 @@ use Numeric::Pack :ints;
 use BlkMeV::Protocol;
 use BlkMeV::Util;
 
-module BlkMeV {
+package BlkMeV {
 
   sub verack(BlkMeV::Chain::Chain $chain) is export {
     my $payload = Buf.new();
