@@ -12,24 +12,38 @@ use BlkMeV::Command::Version;
 package BlkMeV {
   module Net is export {
 
-    our sub client (@mempool, $chain, $host, $master_switch) {
+    our sub client_pool_builder(:@clientpool, :@mempool, :$master_switch) {
+      my $client_supplier = Supplier.new;
+      my $client_supply = $client_supplier.Supply;
+      $client_supply.tap( -> ($chain, $host) {
+          Net::client(@mempool, $chain, $host, $client_supplier, $master_switch);
+          @clientpool.push($host);
+          say "* pool new client {$chain.name} {$host}. pool size {@clientpool.elems}";
+        },
+        done => ->  { say "client supply done" } ,
+        quit => ->  { say "client supply quit" }
+      );
+      $client_supplier
+    }
+
+    our sub client (@mempool, $chain, $host, $client_supplier, $master_switch) {
       my $supplier = Supplier.new;
-      my $supply = $supplier.Supply;
+      my $socket_supply = $supplier.Supply;
 
       say "* connecting {$chain.name} {$host}:{$chain.port}";
 
       IO::Socket::Async.connect($host, $chain.port).then( -> $promise {
-        CATCH { default { say .^name, ': ', .Str } };
+#        CATCH { default { say .^name, ': ', .Str } };
         my $socket = $promise.result;
         say "connected to {$socket.peer-host}:{$socket.peer-port}";
         my $header = BlkMeV::Header::Header.new;
         $header.fromStr("+connect");
         $supplier.emit(($socket, $chain, $header, Buf.new()));
-        BlkMeV::Net::read_loop($socket, $chain, $supplier, $master_switch);
+        read_loop($socket, $chain, $supplier, $master_switch);
       });
 
-      $supply.tap( -> ($socket, $chain, $header, $payload) {
-        dispatch($socket, $chain, $header, $payload, @mempool, $master_switch)
+      $socket_supply.tap( -> ($socket, $chain, $header, $payload) {
+        dispatch($socket, $chain, $header, $payload, @mempool, $client_supplier, $master_switch)
       });
     }
 
@@ -38,6 +52,7 @@ package BlkMeV {
                      BlkMeV::Header::Header $header,
                      Buf $payload,
                      @mempool,
+                     Supplier$client_supplier,
                      Channel $master_switch) {
 
       if $header.command eq "+connect" {
@@ -53,12 +68,13 @@ package BlkMeV {
         $v.fromBuf($payload);
         say "Connected to: {$v.user_agent} version #{$v.protocol_version} height #{$v.block_height}";
 
-        my $msg = verack($chain);
+        my $msg = BlkMeV::Protocol::push($chain, "verack", Buf.new());
         say "send verack";
         $socket.write($msg);
       }
 
       if $header.command eq "verack" {
+        # BlkMeV::Protocol::push("getinfo", Buf.new());
         # peer accepted us, find other peers
         $socket.write(BlkMeV::Protocol::push($chain, "getaddr", Buf.new()));
       }
@@ -68,7 +84,9 @@ package BlkMeV {
         $a.fromBuf($payload);
         say "peers: {$a.addrs[0]} ... {$a.addrs.elems} peer addresses";
         my @ipv4s = $a.addrs.grep({$_[0].substr(0,1) ne '['});
-        for @ipv4s { client(@mempool, $chain, $_[0], $master_switch) }
+        for @ipv4s {
+          $client_supplier.emit(($chain, $_[0]))
+        }
       }
 
       if $header.command eq "reject" {
@@ -98,7 +116,10 @@ package BlkMeV {
       }
     }
 
-    our sub read_loop(IO::Socket::Async $socket, $chain, Supplier $supplier, Channel $master_switch) {
+    our sub read_loop(IO::Socket::Async $socket,
+                      $chain,
+                      Supplier $supplier,
+                      Channel $master_switch) {
       my $msgbuf = Buf.new;
       my $gotHeader = False;
       my BlkMeV::Header::Header $header;
@@ -120,8 +141,8 @@ package BlkMeV {
           $supplier.emit(($socket, $chain, $header, $payload));
         }
       },
-      done => ->  { say "async IO done" } ,
-      quit => ->  { say "async IO quit" });
+      done => -> { say "async IO done" } ,
+      quit => -> $e { say "async IO quit {$e}" });
     }
   }
 }
