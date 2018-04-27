@@ -54,7 +54,7 @@ module BlkMeV::Chain {
         $block_height = 1392000;
       }
 
-      return self.bless(:$name, :$host, :$port, :&hash_func, user_agent => "/BlkMeV:0.1.0/",
+      return self.bless(:$name, :$host, :$port, :&hash_func, user_agent => "/BlkMeV:{$name}:{$BlkMeV::Version}/",
                         :$protocol_version, :$block_height);
     }
   }

@@ -2,16 +2,14 @@
 
 use v6;
 use lib './lib';
-use BlkMeV;
 use BlkMeV::Net;
 
 sub MAIN ( Str $chain_name =  "bitcoin", Str $seed_host = "" ) {
-
-  my $chain = BlkMeV::Chain::Chain.new(name => $chain_name);
   my $master_switch = Channel.new;
   my @mempool;
   my @clientpool;
-  my $host = $seed_host.chars > 0 ?? $seed_host !! $chain.host;
+
+  my $chain = BlkMeV::Chain::Chain.new(name => $chain_name);
 
   # clientpool supply
   my $client_supplier = Net::client_pool_builder(:@clientpool,
@@ -19,6 +17,7 @@ sub MAIN ( Str $chain_name =  "bitcoin", Str $seed_host = "" ) {
                                                  :$master_switch);
 
   # seed the pool
+  my $host = $seed_host.chars > 0 ?? $seed_host !! $chain.host;
   $client_supplier.emit(($chain, $host));
 
   $master_switch.receive; # wait unit quit

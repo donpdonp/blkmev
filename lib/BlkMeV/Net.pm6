@@ -16,9 +16,13 @@ package BlkMeV {
       my $client_supplier = Supplier.new;
       my $client_supply = $client_supplier.Supply;
       $client_supply.tap( -> ($chain, $host) {
-          Net::client(@mempool, $chain, $host, $client_supplier, $master_switch);
-          @clientpool.push($host);
-          say "* pool new client {$chain.name} {$host}. pool size {@clientpool.elems}";
+          if @clientpool.elems < 10 {
+            Net::client(@mempool, $chain, $host, $client_supplier, $master_switch);
+            @clientpool.push($host);
+            say "* pool new client {$chain.name} {$host}. pool size {@clientpool.elems}";
+          } else {
+            say "* client ignored. pool full at {$@clientpool.elems}"
+          }
         },
         done => ->  { say "client supply done" } ,
         quit => ->  { say "client supply quit" }
@@ -106,7 +110,7 @@ package BlkMeV {
           } else {
             @mempool.push($hexitem);
           }
-          say "{$c.typeName($_[0])} {$hexitem} mempool#{@mempool.elems} {$DUP}";
+          say "{$socket.peer-host} [{BlkMeV::Protocol::networkName($header.chain_id)}] {$c.typeName($_[0])} {$hexitem} mempool#{@mempool.elems} {$DUP}";
         }
       }
 
