@@ -2,7 +2,6 @@ use v6;
 use experimental :pack;
 use BlkMeV;
 use BlkMeV::Header;
-use BlkMeV::Chain;
 use BlkMeV::Protocol;
 use BlkMeV::Command::Inv;
 use BlkMeV::Command::Reject;
@@ -19,7 +18,7 @@ package BlkMeV {
           if @clientpool.elems < 10 {
             Net::client(@mempool, $chain, $host, $client_supplier, $master_switch);
             @clientpool.push($host);
-            say "* pool new client {$chain.name} {$host}. pool size {@clientpool.elems}";
+            say "* pool new client {$chain.params.name} {$host}. pool size {@clientpool.elems}";
           } else {
             say "* client ignored. pool full at {$@clientpool.elems}"
           }
@@ -34,10 +33,10 @@ package BlkMeV {
       my $supplier = Supplier.new;
       my $socket_supply = $supplier.Supply;
 
-      say "* connecting {$chain.name} {$host}:{$chain.port}";
+      say "* connecting {$chain.params.name} {$host}:{$chain.params.port}";
 
-      IO::Socket::Async.connect($host, $chain.port).then( -> $promise {
-#        CATCH { default { say .^name, ': ', .Str } };
+      IO::Socket::Async.connect($host, $chain.params.port).then( -> $promise {
+        CATCH { default { say .^name, ': ', .Str } };
         my $socket = $promise.result;
         say "connected to {$socket.peer-host}:{$socket.peer-port}";
         my $header = BlkMeV::Header::Header.new;
@@ -63,7 +62,7 @@ package BlkMeV {
         my $v = Command::Version.new;
         my $payload = $v.build($chain);
         my $msg = BlkMeV::Protocol::push($chain, "version", $payload);
-        say "sending version {$chain.protocol_version} {$chain.user_agent} block height {$chain.block_height} payload len {$msg.elems-24}";
+        say "sending version {$chain.params.protocol_version} {$chain.params.user_agent} block height {$chain.params.block_height} payload len {$msg.elems-24}";
         $socket.write($msg);
       }
 
@@ -110,7 +109,7 @@ package BlkMeV {
           } else {
             @mempool.push($hexitem);
           }
-          say "{$socket.peer-host} [{BlkMeV::Protocol::networkName($header.chain_id)}] {$c.typeName($_[0])} {$hexitem} mempool#{@mempool.elems} {$DUP}";
+          say "{$socket.peer-host} [{BlkMeV::Chain::chain_params_by_header($header.chain_id).name}] {$c.typeName($_[0])} {$hexitem} mempool#{@mempool.elems} {$DUP}";
         }
       }
 
@@ -135,7 +134,7 @@ package BlkMeV {
             $header = BlkMeV::Header::Header.new;
             $header.fromBuf($header_buf);
             $gotHeader = True;
-            say "{$socket.peer-host} [{BlkMeV::Protocol::networkName($header.chain_id)}] command: {$header.command.uc} ({$header.payload_length} bytes)";
+            say "{$socket.peer-host} [{BlkMeV::Chain::chain_params_by_header($header.chain_id).name}] command: {$header.command.uc} ({$header.payload_length} bytes)";
           }
         }
 

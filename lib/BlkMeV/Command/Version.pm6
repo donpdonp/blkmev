@@ -1,5 +1,5 @@
 use BlkMeV::Util;
-use BlkMeV::Chain;
+use BlkMeV::Chain::Chain;
 
 package BlkMeV {
   module Command is export {
@@ -11,15 +11,16 @@ package BlkMeV {
       has Int $.protocol_version;
 
       method build(BlkMeV::Chain::Chain $chain) {
+        say "versno biuld chain {$chain}";
         my $payload = Buf.new();
-        $payload.append(Util::int32Buf($chain.protocol_version)); #version
+        $payload.append(Util::int32Buf($chain.params.protocol_version)); #version
         $payload.append(Util::int64Buf(7)); #services
         $payload.append(Util::int64Buf(DateTime.now.posix)); #timestamp
         $payload.append(BlkMeV::Protocol::netAddress(1)); #Recipient
         $payload.append(BlkMeV::Protocol::netAddress(2)); #Sender
         $payload.append(Util::int64Buf(1521609933)); #nodeID/nonce
-        $payload.append(Util::strToBuf($chain.user_agent)); #client version string
-        $payload.append(Util::int32Buf($chain.block_height)); #blockheight
+        $payload.append(Util::strToBuf($chain.params.user_agent)); #client version string
+        $payload.append(Util::int32Buf($chain.params.block_height)); #blockheight
       }
 
       method fromBuf(Buf $b) {

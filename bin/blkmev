@@ -9,7 +9,7 @@ sub MAIN ( Str $chain_name =  "bitcoin", Str $seed_host = "" ) {
   my @mempool;
   my @clientpool;
 
-  my $chain = BlkMeV::Chain::Chain.new(name => $chain_name);
+  my $chain = BlkMeV::Chain::Chain.new(:name($chain_name));
 
   # clientpool supply
   my $client_supplier = Net::client_pool_builder(:@clientpool,
@@ -17,7 +17,7 @@ sub MAIN ( Str $chain_name =  "bitcoin", Str $seed_host = "" ) {
                                                  :$master_switch);
 
   # seed the pool
-  my $host = $seed_host.chars > 0 ?? $seed_host !! $chain.host;
+  my $host = $seed_host.chars > 0 ?? $seed_host !! $chain.params.host;
   $client_supplier.emit(($chain, $host));
 
   $master_switch.receive; # wait unit quit
