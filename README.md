@@ -1,4 +1,7 @@
 ##
+Install with `$ zef install .`
+
+##
 
 the bitcoin protocol in perl6, because why not. a command line tool for building hashlock/timelock transactions and watching the mempool as the atomic swap process progresses.
 

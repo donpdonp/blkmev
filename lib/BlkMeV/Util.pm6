@@ -1,15 +1,14 @@
-use Numeric::Pack :ints;
 use experimental :pack;
 
 package BlkMeV {
   module Util is export {
 
     our sub int32Buf($int) returns Buf {
-      pack-uint32 $int, :byte-order(little-endian);;
+      pack("L", $int);
     }
 
     our sub int64Buf($int) {
-      pack-uint64 $int, :byte-order(little-endian);;
+      pack("S", $int);
     }
 
     our sub strToBuf($s) {

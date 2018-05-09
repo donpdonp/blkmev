@@ -1,3 +1,4 @@
 {
-"depends" : ["Digest::SHA256::Native", "Numeric::Pack" ]
+  "name":"BlkMev",
+  "depends" : ["Digest::SHA256::Native"]
 }
