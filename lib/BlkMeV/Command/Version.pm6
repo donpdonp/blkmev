@@ -11,7 +11,6 @@ package BlkMeV {
       has Int $.protocol_version;
 
       method build(BlkMeV::Chain::Chain $chain) {
-        say "versno biuld chain {$chain}";
         my $payload = Buf.new();
         $payload.append(Util::int32Buf($chain.params.protocol_version)); #version
         $payload.append(Util::int64Buf(7)); #services
