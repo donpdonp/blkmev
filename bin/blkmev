@@ -18,7 +18,8 @@ sub MAIN ( Str $chain_name =  "bitcoin", Str $seed_host = "" ) {
 
   # seed the pool
   my $host = $seed_host.chars > 0 ?? $seed_host !! $chain.params.host;
-  $client_supplier.emit(($chain, $host));
+  my $client = host => $host;
+  $client_supplier.emit(($chain, $client, True));
 
   $master_switch.receive; # wait unit quit
   say "Shutting down";

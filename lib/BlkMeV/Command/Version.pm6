@@ -13,7 +13,7 @@ package BlkMeV {
       method build(BlkMeV::Chain::Chain $chain) {
         my $payload = Buf.new();
         $payload.append(Util::int32Buf($chain.params.protocol_version)); #version
-        $payload.append(Util::int64Buf(7)); #services
+        $payload.append(Util::int64Buf($chain.params.services)); #services
         $payload.append(Util::int64Buf(DateTime.now.posix)); #timestamp
         $payload.append(BlkMeV::Protocol::netAddress(1)); #Recipient
         $payload.append(BlkMeV::Protocol::netAddress(2)); #Sender

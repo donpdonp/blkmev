@@ -4,6 +4,7 @@ package BlkMeV::Chain::Params {
     has Buf $.header;
     has Str $.host;
     has Int $.port;
+    has Int $.services;
     has &.hash_func;
     has Str $.user_agent;
     has Int $.protocol_version;

@@ -14,13 +14,20 @@ package BlkMeV {
     our sub client_pool_builder(:@clientpool, :@mempool, :$master_switch) {
       my $client_supplier = Supplier.new;
       my $client_supply = $client_supplier.Supply;
-      $client_supply.tap( -> ($chain, $host) {
-          if @clientpool.elems < 10 {
-            Net::client(@mempool, $chain, $host, $client_supplier, $master_switch);
-            @clientpool.push($host);
-            say "* pool new client {$chain.params.name} {$host}. pool size {@clientpool.elems}";
+      $client_supply.tap( -> $tuple {
+          my ($chain, $client, $add) = $tuple;
+          if $add {
+            if @clientpool.elems < 10 {
+              Net::client(@mempool, $chain, $client, $client_supplier, $master_switch);
+              @clientpool.push($client);
+              say "* pool new client {$chain.params.name} {$client.perl}. pool size {@clientpool.elems}";
+            } else {
+              say "* client ignored. pool full at {$@clientpool.elems}"
+            }
           } else {
-            say "* client ignored. pool full at {$@clientpool.elems}"
+            say "pre size {@clientpool.elems}";
+            @clientpool = @clientpool.grep({say "{$_.perl} ne {$client.perl}"; $_ eq $client{"host"}});
+            say "post size {@clientpool.elems}";
           }
         }, #@clientpool = @clientpool.grep({$_ != $host})
         done => ->  { say "client done. {$_} remain." } ,
@@ -29,28 +36,27 @@ package BlkMeV {
       $client_supplier
     }
 
-    our sub client (@mempool, $chain, $host, $client_supplier, $master_switch) {
+    our sub client (@mempool, $chain, $client, $client_supplier, $master_switch) {
       my $message_supplier = Supplier.new;
       my $message_supply = $message_supplier.Supply;
 
-      say "* connecting {$chain.params.name} {$host}:{$chain.params.port}";
+      say "* connecting {$chain.params.name} {$client{"host"}}:{$chain.params.port}";
 
-      IO::Socket::Async.connect($host, $chain.params.port).then( -> $promise {
+      IO::Socket::Async.connect($client{"host"}, $chain.params.port).then( -> $promise {
         my $socket = $promise.result;
         say "connected to {$socket.peer-host}:{$socket.peer-port}";
         my $header = BlkMeV::Header::Header.new;
         $header.fromStr("+connect");
         $message_supplier.emit(($socket, $chain, $header, Buf.new()));
-        my $client_tap = read_loop($socket, $chain, $message_supplier, $master_switch);
-        say "client tap {$client_tap}"
+        read_loop($socket, $chain, $message_supplier, $master_switch);
       });
 
       $message_supply.tap( -> ($socket, $chain, $header, $payload) {
           CLOSE { say "!*!--client close" }
           dispatch($socket, $chain, $header, $payload, @mempool, $client_supplier, $master_switch)
         },
-        done => ->  { say "socket done. {$_} remain." } ,
-        quit => ->  { say "socket quit. {$_} remain." }
+        done => ->  { say "messages done. "; $client_supplier.emit(($chain, $client, False)) } ,
+        quit => -> $e { say "messages quit. {$e}."; $client_supplier.emit(($chain, $client, False)) }
       );
     }
 
@@ -61,29 +67,32 @@ package BlkMeV {
       my $msgbuf = Buf.new;
       my $gotHeader = False;
       my BlkMeV::Header::Header $header;
-      $socket.Supply(:bin).on-close({ say "!*! sockt Tap closed" }).tap( -> $buf {
-        CLOSE { say "!*!--readloop close" }
-        CATCH { say "!*!--readloop catch" }
-        QUIT { say "!*!--readloop quit" }
-        $msgbuf.append($buf);
-        if !$gotHeader {
-          if $msgbuf.elems >= $BlkMeV::Header::PACKET_LENGTH {
-            my $header_buf = BlkMeV::Util::bufTrim($msgbuf, $BlkMeV::Header::PACKET_LENGTH);
-            $header = BlkMeV::Header::Header.new;
-            $header.fromBuf($header_buf);
-            $gotHeader = True;
-            say "{$socket.peer-host} [{BlkMeV::Chain::chain_params_by_header($header.chain_id).name}] command: {$header.command.uc} ({$header.payload_length} bytes)";
+      my $socket_supply = $socket.Supply(:bin);
+      $socket_supply
+      .on-close({ say "!*! socket supply on-close" })
+      .tap( -> $buf {
+          CLOSE { say "!*!--readloop close" }
+          CATCH { say "!*!--readloop catch" }
+          QUIT { say "!*!--readloop quit" }
+          $msgbuf.append($buf);
+          if !$gotHeader {
+            if $msgbuf.elems >= $BlkMeV::Header::PACKET_LENGTH {
+              my $header_buf = BlkMeV::Util::bufTrim($msgbuf, $BlkMeV::Header::PACKET_LENGTH);
+              $header = BlkMeV::Header::Header.new;
+              $header.fromBuf($header_buf);
+              $gotHeader = True;
+              say "{$socket.peer-host} [{BlkMeV::Chain::chain_params_by_header($header.chain_id).name}] command: {$header.command.uc} ({$header.payload_length} bytes)";
+            }
           }
-        }
 
-        if $msgbuf.elems >= $header.payload_length {
-          my $payload = BlkMeV::Util::bufTrim($msgbuf, $header.payload_length);
-          $gotHeader = False;
-          $message_supplier.emit(($socket, $chain, $header, $payload));
-        }
-      },
-      done => -> { say "async IO done" } ,
-      quit => -> $e { say "async IO quit {$e}" });
+          if $msgbuf.elems >= $header.payload_length {
+            my $payload = BlkMeV::Util::bufTrim($msgbuf, $header.payload_length);
+            $gotHeader = False;
+            $message_supplier.emit(($socket, $chain, $header, $payload));
+          }
+        },
+        done => -> { say "read_loop done" } ,
+        quit => -> $e { say "read_loop quit {$e}"; $message_supplier.quit($e) });
     }
   }
 
@@ -125,7 +134,7 @@ package BlkMeV {
         say "peers: {$a.addrs[0]} ... {$a.addrs.elems} peer addresses";
         my @ipv4s = $a.addrs.grep({$_[0].substr(0,1) ne '['});
         for @ipv4s {
-          $client_supplier.emit(($chain, $_[0]))
+          $client_supplier.emit(($chain, $_[0], True))
         }
       }
 
