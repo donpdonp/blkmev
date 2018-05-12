@@ -15,7 +15,6 @@ my $varIntBuf = Buf.new(1); # 1
 ok BlkMeV::Protocol::varInt($varIntBuf) eq 1;
 nok BlkMeV::Protocol::varInt($varIntBuf) eq 2;
 
-
 my $varIntBuf = Buf.new(0xfd, 0x01, 0x01);
 ok BlkMeV::Protocol::varInt($varIntBuf) eq 257;
 

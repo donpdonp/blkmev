@@ -4,11 +4,11 @@ package BlkMeV {
   module Util is export {
 
     our sub int32Buf($int) returns Buf {
-      pack("L", $int);
+      pack("L", $int)
     }
 
     our sub int64Buf($int) {
-      pack("S", $int);
+      pack("LL", $int, $int +> 32)
     }
 
     our sub strToBuf($s) {

@@ -134,7 +134,7 @@ package BlkMeV {
         say "peers: {$a.addrs[0]} ... {$a.addrs.elems} peer addresses";
         my @ipv4s = $a.addrs.grep({$_[0].substr(0,1) ne '['});
         for @ipv4s {
-          $client_supplier.emit(($chain, $_[0], True))
+          $client_supplier.emit(($chain, host => $_[0], True))
         }
       }
 

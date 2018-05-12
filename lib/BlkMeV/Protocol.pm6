@@ -4,7 +4,7 @@ use BlkMeV::Chain::Chain;
 
 module BlkMeV::Protocol {
   our sub push(BlkMeV::Chain::Chain $chain, $verb, $payload) {
-    my $hello = $chain.params.header; say $hello.perl;
+    my $hello = $chain.params.header;
     my $command = BlkMeV::Util::strZeroPad($verb, 12);
     my $payload_length = BlkMeV::Util::int32Buf($payload.elems);
 
