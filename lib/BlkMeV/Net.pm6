@@ -26,7 +26,9 @@ package BlkMeV {
             }
           } else {
             say "clientpool pre size {@clientpool.elems}";
-            @clientpool = @clientpool.grep(-> %c {say "clientpool filter {%c.perl} ne {%client.perl}"; %c{"peer-host"} ne %client{"peer-host"}});
+            @clientpool = @clientpool.grep(-> %c {
+              say "clientpool filter {%c{"peer-host"}} ne {%client{"peer-host"}}";
+              %c{"peer-host"} ne %client{"peer-host"}});
             say "clientpool post size {@clientpool.elems}";
           }
         }, #@clientpool = @clientpool.grep({$_ != $host})
