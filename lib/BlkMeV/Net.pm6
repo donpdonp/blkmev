@@ -22,7 +22,7 @@ package BlkMeV {
               @clientpool.push($client);
               say "* pool new client {$chain.params.name} {$client.perl}. pool size {@clientpool.elems}";
             } else {
-              say "* client ignored. pool full at {$@clientpool.elems}"
+              #say "* client ignored. pool full at {$@clientpool.elems}"
             }
           } else {
             say "pre size {@clientpool.elems}";
