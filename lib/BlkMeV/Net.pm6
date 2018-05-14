@@ -15,18 +15,18 @@ package BlkMeV {
       my $client_supplier = Supplier.new;
       my $client_supply = $client_supplier.Supply;
       $client_supply.tap( -> $tuple {
-          my ($chain, $client, $add) = $tuple;
+          my ($chain, %client, $add) >>=<< $tuple;
           if $add {
             if @clientpool.elems < 10 {
-              my $client_message_supplier = Net::client(@mempool, $chain, $client, $client_supplier, $master_switch);
-              @clientpool.push($client);
-              say "* pool new client {$chain.params.name} {$client.perl}. pool size {@clientpool.elems}";
+              my $client_message_supplier = Net::client(@mempool, $chain, %client, $client_supplier, $master_switch);
+              @clientpool.push(%client);
+              say "* pool new client {$chain.params.name} {%client.perl}. pool size {@clientpool.elems}";
             } else {
               #say "* client ignored. pool full at {$@clientpool.elems}"
             }
           } else {
             say "clientpool pre size {@clientpool.elems}";
-            @clientpool = @clientpool.grep({say "clientpool filter {$_.perl} ne {$client.perl}"; $_ eq $client{"host"}});
+            @clientpool = @clientpool.grep(-> %c {say "clientpool filter {%c.perl} ne {%client.perl}"; %c{"peer-host"} ne %client{"peer-host"}});
             say "clientpool post size {@clientpool.elems}";
           }
         }, #@clientpool = @clientpool.grep({$_ != $host})
