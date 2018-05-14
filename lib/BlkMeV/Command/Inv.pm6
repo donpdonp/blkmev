@@ -1,4 +1,5 @@
 use BlkMeV::Util;
+use BlkMeV::Primitives;
 use BlkMeV::Protocol;
 
 module BlkMeV::Command::Inv {
@@ -13,9 +14,10 @@ module BlkMeV::Command::Inv {
         my $item_size = 36;
         my $item_offset = $len_count + ($idx * $item_size);
         my $item = $b.subbuf($item_offset, $item_size);
-        my $type = BlkMeV::Util::bufToInt32($item);
+        my $typecode = BlkMeV::Util::bufToInt32($item);
         my $hash = $b.subbuf($item_offset+4, 32);
-        @.vectors.push(($type, $hash));
+        my $tx = Primitives::Transaction.new(:$typecode, :$hash);
+        @.vectors.push($tx);
       }
     }
 
