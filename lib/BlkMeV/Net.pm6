@@ -18,9 +18,9 @@ package BlkMeV {
           my ($chain, %client, $add) >>=<< $tuple;
           if $add {
             if @clientpool.elems < 10 {
-              my $client_message_supplier = Net::client(@mempool, $chain, %client, $client_supplier, $master_switch);
               @clientpool.push(%client);
               say "* pool new client {$chain.params.name} {%client.perl}. pool size {@clientpool.elems}";
+              my $client_message_supplier = Net::client(@mempool, $chain, %client, $client_supplier, $master_switch);
             } else {
               #say "* client ignored. pool full at {$@clientpool.elems}"
             }
@@ -140,10 +140,10 @@ package BlkMeV {
       if $header.command eq "version" {
         my $v = Command::Version.new;
         $v.fromBuf($payload);
-        say "Connected to: {$v.user_agent} version #{$v.protocol_version} height #{$v.block_height}";
+        say "{$socket.peer-host} [{BlkMeV::Chain::chain_params_by_header($header.chain_id).name}] {$v.user_agent} version #{$v.protocol_version} height #{$v.block_height}";
 
         my $msg = BlkMeV::Protocol::push($chain, "verack", Buf.new());
-        say "send verack";
+        say "{$socket.peer-host} [{BlkMeV::Chain::chain_params_by_header($header.chain_id).name}] -> VERACK";
         $socket.write($msg);
       }
 
@@ -159,7 +159,7 @@ package BlkMeV {
         say "peers: {$a.addrs[0]} ... {$a.addrs.elems} peer addresses";
         my @ipv4s = $a.addrs.grep({$_[0].substr(0,1) ne '['});
         for @ipv4s {
-          $client_supplier.emit(($chain, %(host => $_[0]), True))
+          $client_supplier.emit(($chain, %("peer" => $_[0], "peer-host" => $_[0]), True))
         }
       }
 
@@ -185,7 +185,7 @@ package BlkMeV {
       }
 
       if $header.command eq "ping" {
-        say "ping/pong {BlkMeV::Util::bufToHex($payload)}";
+        say "{$socket.peer-host} [{BlkMeV::Chain::chain_params_by_header($header.chain_id).name}] -> pong {BlkMeV::Util::bufToHex($payload)}";
         $socket.write(BlkMeV::Protocol::push($chain, "pong", $payload));
       }
     }
