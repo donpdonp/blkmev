@@ -3,8 +3,22 @@ the bitcoin protocol in perl6, because why not.
 ##
 run from source
 ```bash
-$ get clone https://github.com/donpdonp/blkmev
+$ git clone https://github.com/donpdonp/blkmev
+Cloning into 'blkmev'...
+remote: Counting objects: 451, done.
+remote: Compressing objects: 100% (268/268), done.
+remote: Total 451 (delta 240), reused 363 (delta 152), pack-reused 0
+Receiving objects: 100% (451/451), 88.04 KiB | 117.00 KiB/s, done.
+Resolving deltas: 100% (240/240), done.
+Checking connectivity... done.
+$ cd blkmev
 $ zef install .
+===> Testing: BlkMev
+===> Testing [OK] for BlkMev
+===> Installing: BlkMev
+
+1 bin/ script [blkmev] installed to:
+~/.rakudobrew/moar-2018.04.1/install/share/perl6/site/bin
 ```
 
 ##
