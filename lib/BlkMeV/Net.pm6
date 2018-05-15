@@ -1,6 +1,8 @@
 use v6;
 use experimental :pack;
 use BlkMeV;
+use BlkMeV::Log;
+use BlkMeV::Util;
 use BlkMeV::Header;
 use BlkMeV::Protocol;
 use BlkMeV::Command::Inv;
@@ -28,8 +30,8 @@ package BlkMeV {
             say "clientpool pre size {@clientpool.elems}";
             @clientpool = @clientpool.grep(-> %c {
               if %c{"peer-host"}:exists and %client{"peer-host"}:exists {
-                say "clientpool c.peer-host {%c{"peer-host"}} client.peer-host{%client{"peer-host"}}";
-                %c{"peer-host"} eq %client{"peer-host"}
+                say "clientpool pool.peer-host {%c{"peer-host"}} client.peer-host {%client{"peer-host"}}";
+                %c{"peer-host"} ne %client{"peer-host"}
               } else {
                 say "keeping c {%c.perl} vs client {%client.perl}";
                 True
@@ -74,7 +76,6 @@ package BlkMeV {
           my $socket = $promise.result;
           %client{"peer-host"} = $socket.peer-host;
           %client{"peer-port"} = $socket.peer-port;
-          say "connected to {%client.perl}";
           my $header = BlkMeV::Header::Header.new;
           $header.fromStr("+connect");
           $message_supplier.emit(($socket, $chain, $header, Buf.new()));
@@ -133,17 +134,20 @@ package BlkMeV {
         my $v = Command::Version.new;
         my $payload = $v.build($chain);
         my $msg = BlkMeV::Protocol::push($chain, "version", $payload);
-        say "sending version {$chain.params.protocol_version} {$chain.params.user_agent} block height {$chain.params.block_height} payload len {$msg.elems-24}";
+        say "{$socket.peer-host} [{$chain.params.name}] -> VERSION {$chain.params.protocol_version} {$chain.params.user_agent} block height {$chain.params.block_height} payload len {$msg.elems-24}";
         $socket.write($msg);
       }
 
       if $header.command eq "version" {
+        if ! $header.chain_id eqv Buf.new($chain.params.header) {
+          say "!*! chain mismatch. expected {$chain.params.header.perl} and got {$header.chain_id.perl}";
+        }
         my $v = Command::Version.new;
         $v.fromBuf($payload);
-        say "{$socket.peer-host} [{BlkMeV::Chain::chain_params_by_header($header.chain_id).name}] {$v.user_agent} version #{$v.protocol_version} height #{$v.block_height}";
+        Log::say_client $socket, $header, "{$v.user_agent} version #{$v.protocol_version} height #{$v.block_height}";
 
         my $msg = BlkMeV::Protocol::push($chain, "verack", Buf.new());
-        say "{$socket.peer-host} [{BlkMeV::Chain::chain_params_by_header($header.chain_id).name}] -> VERACK";
+        Log::say_client $socket, $header, "-> VERACK";
         $socket.write($msg);
       }
 
@@ -156,10 +160,10 @@ package BlkMeV {
       if $header.command eq "addr" {
         my $a = BlkMeV::Command::Addr::Addr.new;
         $a.fromBuf($payload);
-        say "peers: {$a.addrs[0]} ... {$a.addrs.elems} peer addresses";
+        Log::say_client $socket, $header, "peers: {$a.addrs[0]} ... {$a.addrs.elems} peer addresses";
         my @ipv4s = $a.addrs.grep({$_[0].substr(0,1) ne '['});
         for @ipv4s {
-          $client_supplier.emit(($chain, %("peer" => $_[0], "peer-host" => $_[0]), True))
+          $client_supplier.emit(($chain, %("host" => $_[0], "peer-host" => $_[0]), True))
         }
       }
 
