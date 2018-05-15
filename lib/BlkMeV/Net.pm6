@@ -27,8 +27,13 @@ package BlkMeV {
           } else {
             say "clientpool pre size {@clientpool.elems}";
             @clientpool = @clientpool.grep(-> %c {
-              say "clientpool filter {%c{"peer-host"}} ne {%client{"peer-host"}}";
-              %c{"peer-host"} ne %client{"peer-host"}});
+              if %c{"peer-host"}:exists and %client{"peer-host"}:exists {
+                say "clientpool c.peer-host {%c{"peer-host"}} client.peer-host{%client{"peer-host"}}";
+                %c{"peer-host"} eq %client{"peer-host"}
+              } else {
+                say "keeping c {%c.perl} vs client {%client.perl}";
+                True
+              } });
             say "clientpool post size {@clientpool.elems}";
           }
         }, #@clientpool = @clientpool.grep({$_ != $host})
@@ -42,26 +47,6 @@ package BlkMeV {
       my $message_supplier = Supplier.new;
       my $message_supply = $message_supplier.Supply;
 
-      say "* connecting {$chain.params.name} {%client{"host"}}:{$chain.params.port}";
-      IO::Socket::Async.connect(%client{"host"}, $chain.params.port)
-      .then( -> $promise {
-        CATCH {
-          default {
-            say "!*!-- {$chain.params.name} {%client{"host"}}: {.Str} \n" ~
-                "{.backtrace}";
-            $message_supplier.done
-          }
-        }
-        my $socket = $promise.result;
-        %client{"peer-host"} = $socket.peer-host;
-        %client{"peer-port"} = $socket.peer-port;
-        say "connected to {%client.perl}";
-        my $header = BlkMeV::Header::Header.new;
-        $header.fromStr("+connect");
-        $message_supplier.emit(($socket, $chain, $header, Buf.new()));
-        read_loop($socket, $chain, $message_supplier, $master_switch);
-      });
-
       $message_supply.tap( -> ($socket, $chain, $header, $payload) {
           CLOSE { say "!*!--client close" }
           dispatch($socket, $chain, $header, $payload, @mempool, $client_supplier, $master_switch)
@@ -69,6 +54,33 @@ package BlkMeV {
         done => ->  { say "messages done. "; $client_supplier.emit(($chain, %client, False)) } ,
         quit => -> $e { say "messages quit. {$e}."; $client_supplier.emit(($chain, %client, False)) }
       );
+
+      say "* connecting {$chain.params.name} {%client{"host"}}:{$chain.params.port}";
+      my $socket_promise = IO::Socket::Async.connect(%client{"host"}, $chain.params.port);
+      my $timer_promise = Promise.in(3);
+      await Promise.anyof($socket_promise, $timer_promise);
+      if $timer_promise.status ~~ Kept {
+        say "!*! {%client.perl} connect TIMEOUT";
+        $message_supplier.done;
+      } else {
+        $socket_promise.then( -> $promise {
+          CATCH {
+            default {
+              say "!*!-- {$chain.params.name} {%client{"host"}}: {.Str} \n" ~
+                  "{.backtrace}";
+              $message_supplier.done
+            }
+          }
+          my $socket = $promise.result;
+          %client{"peer-host"} = $socket.peer-host;
+          %client{"peer-port"} = $socket.peer-port;
+          say "connected to {%client.perl}";
+          my $header = BlkMeV::Header::Header.new;
+          $header.fromStr("+connect");
+          $message_supplier.emit(($socket, $chain, $header, Buf.new()));
+          read_loop($socket, $chain, $message_supplier, $master_switch);
+        });
+      }
 
       $message_supplier
     }
@@ -104,7 +116,7 @@ package BlkMeV {
             $message_supplier.emit(($socket, $chain, $header, $payload));
           }
         },
-        done => -> { say "read_loop tap done" } ,
+        done => -> { say "read_loop tap done"; $message_supplier.done  } ,
         quit => -> $e { say "read_loop tap quit {$e}"; $message_supplier.quit($e) });
     }
   }
