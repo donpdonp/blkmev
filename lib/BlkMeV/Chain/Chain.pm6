@@ -16,7 +16,7 @@ package BlkMeV::Chain {
   }
 
   our sub chain_params_by_header(Buf $header) {
-    @coin_params.first(-> $params { $header cmp $params.header == Same });
+    @coin_params.first(-> $params { $header eq $params.header });
   }
 
   class Chain {
