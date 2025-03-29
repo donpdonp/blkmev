@@ -1,4 +1,4 @@
-the bitcoin protocol in perl6, because why not.
+the bitcoin protocol in raku, because why not.
 
 ##
 run from source

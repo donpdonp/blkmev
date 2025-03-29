@@ -179,7 +179,7 @@ package BlkMeV {
         for $c.vectors -> $tx {
           my $hexitem = BlkMeV::Util::bufToHex($tx.hash);
           my $DUP = "";
-          if @mempool.index($hexitem) {
+          if @mempool.first($hexitem, :k) {
             $DUP = "DUP";
           } else {
             @mempool.push($hexitem);
