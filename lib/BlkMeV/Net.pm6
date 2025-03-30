@@ -27,16 +27,13 @@ package BlkMeV {
               #say "* client ignored. pool full at {$@clientpool.elems}"
             }
           } else {
-            say "clientpool pre size {@clientpool.elems}";
+            # filter out client from the pool
             @clientpool = @clientpool.grep(-> %c {
               if %c{"peer-host"}:exists and %client{"peer-host"}:exists {
-                say "clientpool pool.peer-host {%c{"peer-host"}} client.peer-host {%client{"peer-host"}}";
                 %c{"peer-host"} ne %client{"peer-host"}
               } else {
-                say "keeping c {%c.perl} vs client {%client.perl}";
                 True
               } });
-            say "clientpool post size {@clientpool.elems}";
           }
         }, #@clientpool = @clientpool.grep({$_ != $host})
         done => ->  { say "client done. {$_} remain." } ,
@@ -53,7 +50,7 @@ package BlkMeV {
           CLOSE { say "!*!--client close" }
           dispatch($socket, $chain, $header, $payload, @mempool, $client_supplier, $master_switch)
         },
-        done => ->  { say "messages done. "; $client_supplier.emit(($chain, %client, False)) } ,
+        done => ->  { $client_supplier.emit(($chain, %client, False)) } ,
         quit => -> $e { say "messages quit. {$e}."; $client_supplier.emit(($chain, %client, False)) }
       );
 
@@ -107,7 +104,7 @@ package BlkMeV {
               $header = BlkMeV::Header::Header.new;
               $header.fromBuf($header_buf);
               $gotHeader = True;
-              say "{$socket.peer-host} [{BlkMeV::Chain::chain_params_by_header($header.chain_id).name}] command: {$header.command.uc} ({$header.payload_length} bytes)";
+              say "{$socket.peer-host} [{BlkMeV::Chain::chain_params_by_header($header.chain_id).name}] <- {$header.command.uc} ({$header.payload_length} bytes)";
             }
           }
 
@@ -144,7 +141,7 @@ package BlkMeV {
         }
         my $v = Command::Version.new;
         $v.fromBuf($payload);
-        Log::say_client $socket, $header, "{$v.user_agent} version #{$v.protocol_version} height #{$v.block_height}";
+        Log::say_client $socket, $header, "version: {$v.user_agent} version #{$v.protocol_version} height #{$v.block_height}";
 
         my $msg = BlkMeV::Protocol::push($chain, "verack", Buf.new());
         Log::say_client $socket, $header, "-> VERACK";
@@ -160,8 +157,8 @@ package BlkMeV {
       if $header.command eq "addr" {
         my $a = BlkMeV::Command::Addr::Addr.new;
         $a.fromBuf($payload);
-        Log::say_client $socket, $header, "peers: {$a.addrs[0]} ... {$a.addrs.elems} peer addresses";
         my @ipv4s = $a.addrs.grep({$_[0].substr(0,1) ne '['});
+        Log::say_client $socket, $header, "addr: {$a.addrs.elems} peer addresses received ({@ipv4s.elems} ipv4 addresses)";
         for @ipv4s {
           $client_supplier.emit(($chain, %("host" => $_[0], "peer-host" => $_[0]), True))
         }
